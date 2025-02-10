@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-document-management
+  labels:
+    node.service: node
+data:
+  PORT: '3210'
+  API_DEV_MODE: 'true'
+  DB_HOST: 'localhost'
+  DB_PORT: '5432'
+  DB_USERNAME: 'postgres'
+  DB_NAME: 'user_document_management'
+  DB_SCHEMA: 'user_document_management'
+  CONNECTION_POOL: '10'
+  JWT_EXPIRATION: '1h'
+  DEFAULT_ROLE: '3'
+  pythonApiUrl: 'https://jsonplaceholder.typicode.com/posts'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: user-document-management-secret
+type: Opaque
+data:
+  DB_PASSWORD: 'RGVicmFqQFk1NDc='
+  JWT_SECRET: 'ZGVicmFq'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-document-management
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-document-management
+  template:
+    metadata:
+      labels:
+        app: user-document-management
+    spec:
+      containers:
+        - name: user-document-management
+          image: user-document-management:latest
+          ports:
+            - containerPort: 3210
+          envFrom:
+            - configMapRef:
+                name: user-document-management
+            - secretRef:
+                name: user-document-management-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-document-management-service
+spec:
+  selector:
+    app: user-document-management
+  ports:
+    - protocol: TCP
+      port: 3210
+      targetPort: 3210
+  type: ClusterIP

@@ -1,0 +1,32 @@
+---
+ - hosts: localhost
+   connection: true
+   tasks:
+    - name: Log into DockerRegistry
+      shell: echo password | docker login <docker url> -uadmin --password-stdin  
+
+      
+    - name: docker build
+      shell: docker build -t $IMAGE_NAME:$IMAGE_TAG -f Dockerfile.nodejs . --no-cache
+
+
+    - name: docker tagging Version
+      shell: docker tag $IMAGE_NAME:$IMAGE_TAG $REPOSITORY_URI/$IMAGE_NAME:$IMAGE_TAG
+
+
+    - name: docker tagging Latest
+      shell: docker tag $IMAGE_NAME:$IMAGE_TAG $REPOSITORY_URI/$IMAGE_NAME:latest
+
+
+    - name: docker push Version
+      shell: docker push $REPOSITORY_URI/$IMAGE_NAME:$IMAGE_TAG
+
+
+    - name: docker push Latest
+      shell: docker push $REPOSITORY_URI/$IMAGE_NAME:latest
+
+
+    - name: remove docker images
+      shell: docker rmi $IMAGE_NAME:$IMAGE_TAG $REPOSITORY_URI/$IMAGE_NAME:$IMAGE_TAG $REPOSITORY_URI/$IMAGE_NAME:latest
+
+
