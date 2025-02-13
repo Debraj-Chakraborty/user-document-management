@@ -1,0 +1,14 @@
+PORT = '3210'
+API_DEV_MODE='true'
+DB_HOST = 'localhost'
+DB_PORT = '5432'
+DB_USERNAME = 'postgres'
+DB_PASSWORD = 'Debraj@9547'
+DB_NAME = 'user_document_management'
+DB_SCHEMA = 'user_document_management'
+CONNECTION_POOL = '10'
+
+JWT_SECRET='debraj'
+JWT_EXPIRATION='1h'
+DEFAULT_ROLE=3
+pythonApiUrl='https://jsonplaceholder.typicode.com/posts'

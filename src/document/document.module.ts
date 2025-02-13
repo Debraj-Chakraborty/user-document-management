@@ -4,6 +4,7 @@ import { DocumentService } from './document.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
+import { AuthService } from 'src/auth/auth.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { JwtStrategy } from 'src/auth/jwt.strategy';
         signOptions: { expiresIn: process.env.JWT_EXPIRATION },
       }),
     ],
-  providers: [DocumentService,JwtStrategy],
+  providers: [DocumentService,AuthService,JwtStrategy],
   controllers: [DocumentController],
 })
 export class DocumentModule {}

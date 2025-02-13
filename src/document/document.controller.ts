@@ -1,22 +1,21 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, UseInterceptors, UploadedFile, Req, BadRequestException, HttpException, HttpStatus, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, UseInterceptors, UploadedFile, Headers, BadRequestException, HttpException, HttpStatus, Put } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentService } from './document.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
-import { internalServerError } from 'src/Helper/global-utils/internal-server-error';
+import { internalServerErrorFormatter } from 'src/Helper/global-utils/internal-server-error';
 import { Document } from 'src/entity/document.entity';
+import { AuthService } from 'src/auth/auth.service';
 
 @Controller('documents')
 @ApiTags('Documents')
-@ApiBearerAuth()
+@ApiBearerAuth('authorization')
 @UseGuards(AuthGuard('jwt'))
 export class DocumentController {
   constructor(
     private documentService: DocumentService,
-    private jwtService: JwtService
+    private authService: AuthService
   ) { }
 
   @Post()
@@ -59,24 +58,10 @@ export class DocumentController {
   async create(
     @Body() body: { title: string },
     @UploadedFile() file: any,
-    @Req() request: Request
+    @Headers('authorization') authorization: string
   ) {
     try {
-      const authHeader = request.headers['authorization'];
-      if (!authHeader) {
-        throw new Error(`Authorization header is missing`)
-      }
-
-      const token = authHeader.split(' ')[1];
-      if (!token) {
-        throw new Error(`Token is missing in Authorization header`)
-      }
-
-      if (!body.title) {
-        throw new Error('Title is required')
-      }
-      const payload = this.jwtService.verify(token);
-
+      const payload = this.authService.validateToken(authorization);
       const userId = payload.sub;
 
       await this.documentService.create({
@@ -95,7 +80,7 @@ export class DocumentController {
       }
     } catch (error) {
       throw new HttpException(
-        internalServerError(error.message || `Internal Server Error`),
+        internalServerErrorFormatter(error.message || `Internal Server Error`),
         HttpStatus.BAD_REQUEST
       );
     }
@@ -111,8 +96,9 @@ export class DocumentController {
     status: 500,
     description: 'Internal server error',
   })
-  async findAll() {
+  async findAll(@Headers('authorization') authorization: string) {
     try {
+      this.authService.validateToken(authorization);
       const data = await this.documentService.findAll();
       return {
         status: 'SUCCESS',
@@ -122,7 +108,7 @@ export class DocumentController {
       }
     } catch (error) {
       throw new HttpException(
-        internalServerError(error.message || `Failed to retrieve documents`),
+        internalServerErrorFormatter(error.message || `Failed to retrieve documents`),
         HttpStatus.BAD_REQUEST
       );
     }
@@ -169,22 +155,12 @@ export class DocumentController {
   )
   async update(
     @Param('id') id: number,
-    @Req() request: Request,
+    @Headers('authorization') authorization: string,
     @Body() body: { title?: string },
     @UploadedFile() file?: any,
   ) {
     try {
-      const authHeader = request.headers['authorization'];
-      if (!authHeader) {
-        throw new Error(`Authorization header is missing`);
-      }
-
-      const token = authHeader.split(' ')[1];
-      if (!token) {
-        throw new Error(`Token is missing in Authorization header`);
-      }
-
-      const payload = this.jwtService.verify(token);
+      const payload = this.authService.validateToken(authorization);
       const userId = payload.sub;
 
       const updatedData: Partial<Document> = {
@@ -208,7 +184,7 @@ export class DocumentController {
         message: 'Document updated successfully',
       };
     } catch (error) {
-      throw new HttpException(internalServerError(error.message || 'Internal Server Error'), HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(internalServerErrorFormatter(error.message || 'Internal Server Error'), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -217,19 +193,9 @@ export class DocumentController {
   @ApiResponse({ status: 200, description: 'Document deleted successfully' })
   @ApiResponse({ status: 404, description: 'Document not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  async delete(@Param('id') id: number, @Req() request: Request) {
+  async delete(@Param('id') id: number, @Headers('authorization') authorization: string) {
     try {
-      const authHeader = request.headers['authorization'];
-      if (!authHeader) {
-        throw new Error(`Authorization header is missing`);
-      }
-
-      const token = authHeader.split(' ')[1];
-      if (!token) {
-        throw new Error(`Token is missing in Authorization header`);
-      }
-
-      const payload = this.jwtService.verify(token);
+      const payload = this.authService.validateToken(authorization);
       const userId = payload.sub;
 
       await this.documentService.softDelete(id, userId);
@@ -240,7 +206,7 @@ export class DocumentController {
         message: 'Document deleted successfully',
       };
     } catch (error) {
-      throw new HttpException(internalServerError(error.message || 'Internal Server Error'), HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(internalServerErrorFormatter(error.message || 'Internal Server Error'), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

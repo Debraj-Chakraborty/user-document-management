@@ -43,12 +43,17 @@ async function bootstrap() {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'Authorization',
+      'authorization',
     )
+    .addSecurityRequirements('bearer')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+  SwaggerModule.setup('api-docs', app, document , {
+    swaggerOptions: {
+      security: [{ 'bearer': [] }],
+    },
+  });
 
   await app.listen(PORT);
 }

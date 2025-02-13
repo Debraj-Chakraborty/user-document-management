@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
-export function internalServerError(
+export function internalServerErrorFormatter(
   message: string,
   errorCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
 ): {

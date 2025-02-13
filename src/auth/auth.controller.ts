@@ -5,7 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@n
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Logger } from '@nestjs/common';
-import { internalServerError } from 'src/Helper/global-utils/internal-server-error';
+import { internalServerErrorFormatter } from 'src/Helper/global-utils/internal-server-error';
 
 @ApiTags('Authentication')
 @Controller({
@@ -32,7 +32,7 @@ export class AuthController {
             }
         } catch (error) {
             throw new HttpException(
-                internalServerError(`Error in register user:${error}`,HttpStatus.INTERNAL_SERVER_ERROR),
+                internalServerErrorFormatter(`Error in register user:${error}`,HttpStatus.INTERNAL_SERVER_ERROR),
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
@@ -53,7 +53,7 @@ export class AuthController {
                 data:userData
             }
         } catch (error) {
-            throw new HttpException(internalServerError('Invalid credentials',HttpStatus.UNAUTHORIZED), HttpStatus.UNAUTHORIZED);
+            throw new HttpException(internalServerErrorFormatter('Invalid credentials',HttpStatus.UNAUTHORIZED), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -63,7 +63,7 @@ export class AuthController {
     @ApiResponse({ status: 401, description: 'Unauthorized: Invalid or expired token.' })
     @ApiResponse({ status: 400, description: 'Bad Request: Invalid authorization header or token.' })
     @ApiResponse({ status: 500, description: 'Internal server error.' })
-    @ApiBearerAuth()
+    @ApiBearerAuth('authorization')
     @UseGuards(AuthGuard('jwt'))
     async logout(@Headers('authorization') authorization: string): Promise<any> {
         try {
@@ -89,7 +89,7 @@ export class AuthController {
             }
         } catch (error) {
             this.logger.error(`Error logging out: ${error.message}`);
-            throw new HttpException(internalServerError(error.message || `Internal Server Error`,HttpStatus.UNAUTHORIZED), HttpStatus.UNAUTHORIZED);
+            throw new HttpException(internalServerErrorFormatter(error.message || `Internal Server Error`,HttpStatus.UNAUTHORIZED), HttpStatus.UNAUTHORIZED);
 
         }
     }

@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { internalServerError } from 'src/Helper/global-utils/internal-server-error';
+import { internalServerErrorFormatter } from 'src/Helper/global-utils/internal-server-error';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -16,10 +16,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     try {
-      console.log(payload);
       return { id: payload.sub, username: payload.username, role: payload.role };
     } catch (error) {
-      throw new HttpException(internalServerError('Token expired or invalid',HttpStatus.UNAUTHORIZED),HttpStatus.UNAUTHORIZED);
+      throw new HttpException(internalServerErrorFormatter('Token expired or invalid',HttpStatus.UNAUTHORIZED),HttpStatus.UNAUTHORIZED);
     }
   }
 }

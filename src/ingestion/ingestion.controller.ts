@@ -1,9 +1,10 @@
 import { Controller, Post, Body, HttpException, HttpStatus, Get } from '@nestjs/common';
 import { IngestionService } from './ingestion.service';
-import { internalServerError } from 'src/Helper/global-utils/internal-server-error';
-import { ApiBody } from '@nestjs/swagger';
+import { internalServerErrorFormatter } from 'src/Helper/global-utils/internal-server-error';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
 @Controller('ingestion')
+@ApiTags('Ingestion')
 export class IngestionController {
     constructor(private readonly ingestionService: IngestionService) { }
 
@@ -19,7 +20,7 @@ export class IngestionController {
             }
         } catch (error) {
             throw new HttpException(
-                internalServerError(error.message || `Failed to retrieve documents`),
+                internalServerErrorFormatter(error.message || `Failed to retrieve documents`),
                 HttpStatus.BAD_REQUEST
             );
         }
